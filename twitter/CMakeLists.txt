@@ -1,0 +1,151 @@
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+
+get_filename_component(SAMPLE_PROJECT "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+
+project(${SAMPLE_PROJECT} LANGUAGES C CXX)
+
+MESSAGE( STATUS "Location: " ${CMAKE_CURRENT_SOURCE_DIR} )
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Export compilation data-base
+
+# Target for fetching packages
+add_custom_target(fetch_packages)
+
+include(FindPackageHandleStandardArgs)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/shared.cmake)
+
+find_path(LIBOAUTH_INCLUDE_DIR oauth.h
+	PATH_SUFFIXES liboauth)
+
+find_library(LIBOAUTH_LIBRARY NAMES oauth)
+
+set(LIBOAUTH_LIBRARIES ${LIBOAUTH_LIBRARY})
+set(LIBOAUTH_INCLUDE_DIRS ${LIBOAUTH_INCLUDE_DIR})
+
+find_package_handle_standard_args(liboauth DEFAULT_MSG
+	LIBOAUTH_LIBRARY LIBOAUTH_INCLUDE_DIR)
+mark_as_advanced(LIBOAUTH INCLUDE_DIR LIBOAUTH_LIBRARY)
+
+MESSAGE( STATUS "LIBOAUTH_INCLUDE_DIRS: " ${LIBOAUTH_INCLUDE_DIRS} )
+
+find_package(CURL REQUIRED)
+MESSAGE( STATUS "CURL_INCLUDE_DIRS: " ${CURL_INCLUDE_DIRS} )
+
+find_package(OpenGL REQUIRED)
+MESSAGE( STATUS "OPENGL_INCLUDE_DIRS: " ${OPENGL_INCLUDE_DIRS} )
+
+find_package(GLEW REQUIRED)
+MESSAGE( STATUS "GLEW_INCLUDE_DIRS: " ${GLEW_INCLUDE_DIRS} )
+
+find_package(SDL2 REQUIRED)
+string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
+
+MESSAGE( STATUS "SDL2_INCLUDE_DIRS: " ${SDL2_INCLUDE_DIRS} )
+MESSAGE( STATUS "SDL2_LIBRARIES: " ${SDL2_LIBRARIES} )
+
+find_package(SDL2_mixer REQUIRED)
+#string(STRIP ${SDLMIXER_LIBRARIES} SDLMIXER_LIBRARIES)
+
+MESSAGE( STATUS "SDLMIXER_INCLUDE_DIR: " ${SDLMIXER_INCLUDE_DIR} )
+
+find_package(range-v3 REQUIRED)
+MESSAGE( STATUS "range-v3_INCLUDE_DIRS: " ${range-v3_INCLUDE_DIR} )
+
+find_package(rxcpp REQUIRED)
+MESSAGE( STATUS "rxcpp_INCLUDE_DIRS: " ${rxcpp_INCLUDE_DIR} )
+
+find_path(JSON_INCLUDE_DIR json.hpp)
+set(JSON_INCLUDE_DIRS ${JSON_INCLUDE_DIR})
+
+MESSAGE( STATUS "JSON_INCLUDE_DIRS: " ${JSON_INCLUDE_DIRS} )
+
+# define the sources
+set(SAMPLE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui_draw.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui_demo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui_impl_sdl_gl3.cpp
+)
+
+# define the resources
+set(SAMPLE_RESOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui.ini
+    ${CMAKE_CURRENT_SOURCE_DIR}/NotoMono-Regular.ttf
+    ${CMAKE_CURRENT_SOURCE_DIR}/NotoSansSymbols-Regular.ttf
+    ${CMAKE_CURRENT_SOURCE_DIR}/dash.wav
+    ${CMAKE_CURRENT_SOURCE_DIR}/dot.wav
+)
+
+add_executable(${SAMPLE_PROJECT} ${SAMPLE_SOURCES} ${SAMPLE_RESOURCES})
+
+target_compile_options(${SAMPLE_PROJECT} PUBLIC ${SHARED_COMPILE_OPTIONS})
+target_compile_features(${SAMPLE_PROJECT} PUBLIC ${SHARED_COMPILE_FEATURES})
+
+target_include_directories(${SAMPLE_PROJECT} PUBLIC 
+    ${rxcpp_INCLUDE_DIR} 
+    ${range-v3_INCLUDE_DIR} 
+    ${LIBOAUTH_INCLUDE_DIRS} 
+    ${CURL_INCLUDE_DIRS} 
+    ${OPENGL_INCLUDE_DIRS} 
+    ${SDL2_INCLUDE_DIRS} 
+    ${SDLMIXER_INCLUDE_DIR} 
+    ${GLEW_INCLUDE_DIRS} 
+    ${JSON_INCLUDE_DIRS})
+
+target_link_libraries(${SAMPLE_PROJECT} 
+    ${CMAKE_THREAD_LIBS_INIT} 
+    ${LIBOAUTH_LIBRARY} 
+    ${CURL_LIBRARIES} 
+    ${OPENGL_LIBRARIES} 
+    ${SDL2_LIBRARIES} 
+    ${SDLMIXER_LIBRARY} 
+    ${GLEW_LIBRARIES})
+
+set_target_properties(${SAMPLE_PROJECT} PROPERTIES MACOSX_BUNDLE TRUE)
+set_target_properties(${SAMPLE_PROJECT} PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME TwitterAnalysis)
+set_target_properties(${SAMPLE_PROJECT} PROPERTIES MACOSX_BUNDLE_COPYRIGHT "Copyright 2017 Kirk Shoop")
+
+set_source_files_properties(${SAMPLE_RESOURCES} PROPERTIES 
+    HEADER_FILE_ONLY ON
+    MACOSX_PACKAGE_LOCATION Resources)
+
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost COMPONENTS thread) 
+
+MESSAGE( STATUS "Boost_VERSION: " ${Boost_VERSION} )
+
+set(FUTURE_PROJECT
+    future)
+
+add_executable(${FUTURE_PROJECT} future.cpp ${SAMPLE_RESOURCES})
+
+target_compile_options(${FUTURE_PROJECT} PUBLIC ${SHARED_COMPILE_OPTIONS})
+target_compile_features(${FUTURE_PROJECT} PUBLIC ${SHARED_COMPILE_FEATURES})
+target_compile_definitions(${FUTURE_PROJECT} PUBLIC BOOST_THREAD_VERSION=4)
+
+target_include_directories(${FUTURE_PROJECT} SYSTEM PUBLIC 
+    ${Boost_INCLUDE_DIRS}
+    ${range-v3_INCLUDE_DIR} 
+    ${LIBOAUTH_INCLUDE_DIRS} 
+    ${CURL_INCLUDE_DIRS} 
+    ${JSON_INCLUDE_DIRS})
+
+target_link_libraries(${FUTURE_PROJECT} 
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT} 
+    ${LIBOAUTH_LIBRARY} 
+    ${CURL_LIBRARIES})
+
+# configure unit tests via CTest
+enable_testing()
+set(CTEST_CONFIGURATION_TYPE "${JOB_BUILD_CONFIGURATION}")
+
+add_test(NAME RunTests
+     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+     COMMAND ${SAMPLE_PROJECT} ${TEST_ARGS})
