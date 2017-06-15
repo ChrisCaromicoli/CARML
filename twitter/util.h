@@ -2,7 +2,7 @@
 
 namespace util { //A namespace is use dto structure into logical units, all functions to fulfill a certain goal
 
-const float fltmax = numeric_limits<float>::max(); //looks like its creating an array of float values
+const float fltmax = numeric_limits<float>::max(); //looks like its creating an array of float values //defines fltmax to be the max float value (not sure where it is used again tho)
 
 //looks like function that converts strings to lower case
 inline string tolower(string s) { //inline suggests compiler substitute the body of the function inline, inserts function code at address of each function call to save overhead of function call
@@ -15,7 +15,7 @@ enum class Split {
     RemoveDelimiter,
     OnlyDelimiter
 };
-//auto keyword declares a varoable in the automatic storage class
+//auto keyword declares a varoable in the automatic storage class //auto is used when the type is not needed to be known or should be obvious under context
 auto split = [](string s, string d, Split m = Split::KeepDelimiter){
     regex delim(d); //regex-regular expressions, standardzed way to express patterns to be matched against sequences of characters
     //splitting the string
@@ -46,7 +46,7 @@ inline function<observable<string>(observable<long>)> stringandignore() {
 template <class To, class Rep, class Period>
 To floor(const duration<Rep, Period>& d) //rounds duration
 {
-    To t = std::chrono::duration_cast<To>(d); //unsure..
+    To t = std::chrono::duration_cast<To>(d); //unsure.. //changes the duration type To for example miliseconds to seconds
     if (t > d)
         return t - To{1};
     return t;
