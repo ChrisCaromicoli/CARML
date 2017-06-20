@@ -66,21 +66,40 @@ public class Portfolio {
 		
 	}
 	private static void redistributePortfolio(Stock a, Stock b, Stock c, Stock d, Stock e) {
-		if(a.price>a.oldPrice)
+		sell(a,b,c,d,e);
+		buy(a,b,c,d,e);
+		
+		
+	}
+	private static void buy(Stock a, Stock b, Stock c, Stock d, Stock e) {
+		double remaining = calculateRemainingCapital(a,b,c,d,e);
+		if(a.price>a.oldPrice&&remaining>a.getPrice()*a.bundle)
 			a.volume+=a.bundle;
-		else a.volume-=a.bundle;
-		if(b.price>b.oldPrice)
+		if(b.price>b.oldPrice&&remaining>b.getPrice()*b.bundle)
 			b.volume+=b.bundle;
-		else b.volume-=b.bundle;
-		if(c.price>c.oldPrice)
+		if(c.price>c.oldPrice&&remaining>c.getPrice()*c.bundle)
 			c.volume+=c.bundle;
-		else c.volume-=c.bundle;
-		if(d.price>d.oldPrice)
+		if(d.price>d.oldPrice&&remaining>d.getPrice()*d.bundle)
 			d.volume+=d.bundle;
-		else d.volume-=d.bundle;
-		if(e.price>e.oldPrice)
+		if(e.price>e.oldPrice&&remaining>e.getPrice()*e.bundle)
 			e.volume+=e.bundle;
-		else e.volume-=e.bundle;
+		
+		
+	}
+	private static double calculateRemainingCapital(Stock a, Stock b, Stock c, Stock d, Stock e) {
+		return capital-a.getPrice()-b.getPrice()-c.getPrice()-d.getPrice()-e.getPrice();
+	}
+	private static void sell(Stock a, Stock b, Stock c, Stock d, Stock e) {
+		if(a.price<a.oldPrice)
+			a.volume-=a.bundle;
+		if(b.price<b.oldPrice)
+			b.volume-=b.bundle;
+		if(c.price<c.oldPrice)
+			c.volume-=c.bundle;
+		if(d.price<d.oldPrice)
+			d.volume-=d.bundle;
+		if(e.price<e.oldPrice)
+			e.volume-=e.bundle;
 		
 	}
 	//Initial setup of portfolio delta and underlining option
