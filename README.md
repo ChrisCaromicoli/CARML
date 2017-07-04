@@ -1,7 +1,7 @@
 # CARML
 Decision making and distribution software
 
-Matt mclean
+matt
 
 Andrew Downie
 
